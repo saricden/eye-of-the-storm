@@ -10,11 +10,11 @@ class BootScene extends Scene {
     this.load.image('bullet', 'assets/bullet.png');
     this.load.image('ui-shell-pistol', 'assets/ui-shell.png');
     this.load.image('ui-shell-shotgun', 'assets/ui-shell-shotgun.png');
-    this.load.image('pistol', 'assets/pistol.png');
     
     this.load.atlas('mc-top', 'assets/mc-top.png', 'assets/mc-top.json');
     this.load.atlas('mc-bottom', 'assets/mc-bottom.png', 'assets/mc-bottom.json');
     this.load.atlas('mc-die', 'assets/mc-die.png', 'assets/mc-die.json');
+    this.load.atlas('guns', 'assets/gun.png', 'assets/gun.json');
 
     this.load.atlas('bug', 'assets/bug.png', 'assets/bug.json');
 
@@ -27,7 +27,7 @@ class BootScene extends Scene {
     this.load.audio('sfx-big-splat', 'assets/sfx/big-splat.mp3');
     this.load.audio('sfx-ow', 'assets/sfx/ow.mp3');
     this.load.audio('sfx-dryfire', 'assets/sfx/dryfire.mp3');
-    this.load.audio('sfx-reload', 'assets/sfx/reload.mp3');
+    this.load.audio('sfx-pistol-reload', 'assets/sfx/reload.mp3');
     this.load.audio('sfx-roar', 'assets/sfx/roar.mp3');
     this.load.audio('sfx-squak', 'assets/sfx/squak.mp3');
     this.load.audio('sfx-footstep', 'assets/sfx/footstep.mp3');
@@ -45,9 +45,10 @@ class BootScene extends Scene {
     this.anims.createFromAseprite('mc-top');
     this.anims.createFromAseprite('mc-bottom');
     this.anims.createFromAseprite('mc-die');
+    this.anims.createFromAseprite('guns');
     this.anims.createFromAseprite('bug');
 
-    // this.sound.setVolume(0);
+    this.sound.setVolume(0);
 
     this.scene.start('scene-title');
   }

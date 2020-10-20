@@ -7,20 +7,20 @@ class RedLeader extends Container {
     const top = scene.physics.add.sprite(0, 0, 'mc-top');
     const bottom = scene.physics.add.sprite(0, 0, 'mc-bottom');
     const dead = scene.physics.add.sprite(0, 0, 'mc-die').setVisible(false);
-    const pistol = scene.physics.add.sprite(0, 0, 'pistol').setVisible(false);
+    const gun = scene.physics.add.sprite(0, 0, 'guns').setVisible(false);
 
     super(scene, x, y, [
       bottom,
       top,
       dead,
-      pistol
+      gun
     ]);
 
     this.top = top;
     this.bottom = bottom;
     this.dead = dead;
     this.scene = scene;
-    this.pistol = pistol;
+    this.gun = gun;
 
     this.currentWeapon = 'shotgun';
 
@@ -185,7 +185,7 @@ class RedLeader extends Container {
         this.scene.ui.bulletsInClip[this.currentWeapon] += bulletsToReload;
 
         this.scene.ui.ammoText[this.currentWeapon].setText(this.scene.ui.totalBullets[this.currentWeapon]);
-        this.scene.sound.play('sfx-reload');
+        this.scene.sound.play(`sfx-${this.currentWeapon}-reload`);
         this.top.play({ key: `reload-${this.currentWeapon}`, repeat: 0, frameRate: 6 });
         this.isReloading = true;
       }
@@ -196,7 +196,7 @@ class RedLeader extends Container {
       if (deltaY < 0 && this.currentWeapon !== 'pistol') {
         this.currentWeapon = 'pistol';
         this.scene.ui.showAmmoUI('pistol');
-        this.scene.sound.play('sfx-reload');
+        this.scene.sound.play('sfx-pistol-reload');
       }
       else if (deltaY > 0 && this.currentWeapon !== 'shotgun') {
         this.currentWeapon = 'shotgun';
@@ -254,19 +254,20 @@ class RedLeader extends Container {
       this.top.setVisible(false);
       this.bottom.setVisible(false);
       this.dead.setVisible(true);
-      this.dead.play({ key: 'mc-fall', repeat: 0, frameRate: 20 });
+      this.dead.play({ key: 'mc-fall', repeat: 0, frameRate: 14 });
       this.dead.setRotation(aimAngle + (Math.PI / 2));
 
-      this.pistol.setVisible(true);
+      this.gun.setVisible(true);
+      this.gun.play({ key: this.currentWeapon, repeat: 0 });
       const xOffset = pMath.Between(-50, 50);
       const yOffset = pMath.Between(-50, 50);
-      const deg = pMath.Between(0, 360);
+      const angle = pMath.Between(0, 360);
 
       this.scene.tweens.add({
-        targets: this.pistol,
+        targets: this.gun,
         x: xOffset,
         y: yOffset,
-        angleDeg: deg,
+        angle: angle,
         duration: 200,
         repeat: 0
       });
