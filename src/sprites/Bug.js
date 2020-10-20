@@ -17,25 +17,31 @@ class Bug extends Container {
     this.sprite = sprite;
     this.hpBar = hitBarGfx;
 
-    this.maxHP = 15;
+    this.setDepth(60);
+
+    this.maxHP = 10;
     this.hp = this.maxHP;
     this.isDead = false;
     this.enemyType = 'bug';
+    this.alerted = false;
+    this.damageOnTouch = 5;
 
     this.sprite.play({ key: 'bug-move', repeat: -1, frameRate: 4 });
 
     this.scene.add.existing(this);
     this.scene.physics.world.enable(this);
+
+    this.sprite.setPosition((this.body.width / 2), (this.body.height / 2));
   }
 
   drawHealthBar() {
     this.hpBar.clear();
     this.hpBar.fillStyle(0x333333);
-    this.hpBar.fillRect(-(this.body.width / 2), 0, this.body.width, 6);
+    this.hpBar.fillRect(0, (this.body.height / 2), this.body.width, 6);
     this.hpBar.fillStyle(0xCC0000);
     this.hpBar.fillRect(
-      -(this.body.width / 2 - 2),
       2,
+      (this.body.height / 2 + 2),
       ((this.body.width - 4) * (this.hp / this.maxHP)),
       2
     );
@@ -44,10 +50,10 @@ class Bug extends Container {
   update() {
     const d2mc = pMath.Distance.Between(this.x, this.y, this.mc.x, this.mc.y);
     const closeToMC = (d2mc < 300);
-    const isAlive = (this.hp > 0);
+    const hasHP = (this.hp > 0);
 
-    if (isAlive) {
-      if (closeToMC) {
+    if (hasHP) {
+      if (closeToMC || this.alerted) {
         const a2mc = pMath.Angle.Between(this.x, this.y, this.mc.x, this.mc.y);
         this.sprite.setRotation(a2mc + (Math.PI / 2));
         this.scene.physics.moveTo(this, this.mc.x, this.mc.y, 40);
@@ -64,6 +70,7 @@ class Bug extends Container {
       this.sprite.play({ key: 'bug-splat', repeat: 0 });
       this.scene.sound.play('sfx-big-splat');
       this.isDead = true;
+      this.setDepth(40);
     }
   }
 }

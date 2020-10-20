@@ -11,7 +11,8 @@ class GameUI extends Scene {
     this.uiBgGFX.setDepth(90);
 
     this.gameScene = this.scene.get('scene-game');
-    this.totalBullets = 50;
+    this.mc = this.gameScene.mc;
+    this.totalBullets = 250;
     this.clipMaxBullets = 20;
     this.clipRows = 2;
     this.bulletsInClip = this.clipMaxBullets;
@@ -92,7 +93,49 @@ class GameUI extends Scene {
       miniMapWidth,
       20
     );
-    
+
+    this.uiHpBarGFX = this.add.graphics();
+
+    this.fadeGfx = this.add.graphics();
+    this.fadeGfx.setDepth(1000);
+  }
+
+  fadeToWhite() {
+    this.fadeGfx.fillStyle(0xFFFFFF, 1);
+    this.fadeGfx.setAlpha(0);
+    this.fadeGfx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+    this.tweens.add({
+      targets: this.fadeGfx,
+      alpha: 1,
+      duration: 4000,
+      repeat: 0,
+      onComplete: () => {
+        this.gameScene.scene.start('scene-gameover');
+        this.scene.stop();
+      }
+    });
+  }
+
+  update() {
+    this.uiHpBarGFX.clear();
+
+    if (this.mc.hp > 0) {
+      this.uiHpBarGFX.fillStyle(0x0033CC, 0.5);
+      this.uiHpBarGFX.fillRect(
+        (60 + (this.clipMaxBullets / this.clipRows * 16)),
+        10,
+        window.innerWidth - (80 + (this.clipMaxBullets / this.clipRows * 16)),
+        60
+      );
+      this.uiHpBarGFX.fillStyle(0xFFFFFF, 1);
+      this.uiHpBarGFX.fillRect(
+        (70 + (this.clipMaxBullets / this.clipRows * 16)),
+        20,
+        (window.innerWidth - (100 + (this.clipMaxBullets / this.clipRows * 16))) * (this.mc.hp / this.mc.maxHP),
+        40
+      );
+    }
   }
 }
 

@@ -3,6 +3,8 @@ import Phaser, {Game} from 'phaser';
 import BootScene from './scenes/BootScene';
 import GameScene from './scenes/GameScene';
 import GameUI from './scenes/ui/GameUI';
+import GameOver from './scenes/menus/GameOver';
+import Title from './scenes/menus/Title';
 
 const config = {
   type: Phaser.WEB_GL,
@@ -22,7 +24,9 @@ const config = {
   pixelArt: true,
   scene: [
     BootScene,
+    Title,
     GameScene,
+    GameOver,
     GameUI
   ]
 };

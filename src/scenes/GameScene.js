@@ -45,6 +45,7 @@ class GameScene extends Scene {
         
         this.cameras.main.startFollow(this.mc);
         this.cameras.main.setFollowOffset(-(this.mc.body.width / 2), -(this.mc.body.height / 2));
+        this.cameras.main.setBounds(0, 0, this.solidLayer.width, this.solidLayer.height);
 
         this.physics.add.collider(this.mc, this.solidLayer);
       }
@@ -57,6 +58,12 @@ class GameScene extends Scene {
         });
 
         this.physics.add.collider(bug, this.solidLayer);
+
+        this.physics.add.overlap(bug, this.mc, (bug, mc) => {
+          if (!bug.isDead) {
+            mc.receiveDamage(bug.damageOnTouch);
+          }
+        }, null, this);
 
         this.bugs = [
           ...this.bugs,
@@ -89,6 +96,8 @@ class GameScene extends Scene {
       loop: true
     });
     this.bgm.play();
+
+    // this.bgm.setVolume(0);
   }
 
   update(time, delta) {
