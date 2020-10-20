@@ -20,33 +20,40 @@ class GameUI extends Scene {
     this.uiBullets = [];
 
     this.totalBullets = {
-      'pistol': 250,
-      'shotgun': 40
+      'pistol': 100,
+      'shotgun': 40,
+      'smg': 500
     };
     this.clipMaxBullets = {
       'pistol': 20,
-      'shotgun': 8
+      'shotgun': 8,
+      'smg': 40
     };
     this.bulletsInClip = {
       'pistol': this.clipMaxBullets['pistol'],
-      'shotgun': this.clipMaxBullets['shotgun']
+      'shotgun': this.clipMaxBullets['shotgun'],
+      'smg': this.clipMaxBullets['smg']
     };
     this.clipRows = {
       'pistol': 2,
-      'shotgun': 1
+      'shotgun': 1,
+      'smg': 4
     };
     this.uiBullets = {
       'pistol': [],
-      'shotgun': []
+      'shotgun': [],
+      'smg': []
     };
     this.lastRowY = {
       'pistol': 0,
-      'shotgun': 0
+      'shotgun': 0,
+      'smg': 0
     };
 
     this.ammoText = {
       'pistol': null,
-      'shotgun': null
+      'shotgun': null,
+      'smg': null
     };
 
     // Clip UI
@@ -77,6 +84,8 @@ class GameUI extends Scene {
       this.ammoText[g].setDepth(100);
       this.ammoText[g].setVisible(visible);
     }
+
+    console.log(this.uiBullets);
 
     // UI background
     this.bgClip = this.add.graphics();
@@ -142,11 +151,13 @@ class GameUI extends Scene {
   }
 
   showAmmoUI(gun) {
+    console.log(gun);
     for (let g in this.clipRows) {
       const visible = (g === gun);
 
       for (let y = 0; y < this.clipRows[g]; y++) {
         const rowTotal = (this.clipMaxBullets[g] / this.clipRows[g]);
+        console.log(rowTotal);
         for (let x = 0; x < rowTotal; x++) {
           const bulletIndex = ((y * rowTotal) + x);
           const uiBullet = this.uiBullets[g][bulletIndex];

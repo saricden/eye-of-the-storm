@@ -22,7 +22,13 @@ class RedLeader extends Container {
     this.scene = scene;
     this.gun = gun;
 
-    this.currentWeapon = 'shotgun';
+    this.allWeapons = [
+      'pistol',
+      'shotgun',
+      'smg'
+    ];
+    // this.equipedWeapons = [];
+    this.currentWeapon = this.allWeapons[0];
 
     this.scene.add.existing(this);
     this.scene.physics.world.enable(this);
@@ -82,7 +88,20 @@ class RedLeader extends Container {
       angle: 0,
       deathZone: { type: 'onEnter', source: enemyCollider },
       emitCallback: () => {
-        this.emitter.stop();
+        if (this.currentWeapon !== 'smg') {
+          this.emitter.stop();
+        }
+        else {
+          if (this.scene.ui.bulletsInClip[this.currentWeapon] > 0) {
+            this.reduceAmmo();
+            this.scene.sound.play('sfx-smg-shot');
+          }
+          else {
+            this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
+            this.emitter.stop();
+            this.scene.sound.play('sfx-dryfire');
+          }
+        }
       },
       emitCallbackScope: this
     });
@@ -110,10 +129,13 @@ class RedLeader extends Container {
               this.emitter.fromJSON({
                 speed: 500,
                 lifespan: 2000,
-                quantity: 1
+                quantity: 1,
+                frequency: 0
               });
 
               this.emitter.setAngle(angleDeg);
+
+              this.reduceAmmo();
 
               this.scene.sound.play('sfx-pistol-shot');
             }
@@ -122,7 +144,8 @@ class RedLeader extends Container {
               this.emitter.fromJSON({
                 speed: 500,
                 lifespan: 400,
-                quantity: 8
+                quantity: 8,
+                frequency: 0
               });
 
               this.emitter.setAngle({
@@ -130,27 +153,41 @@ class RedLeader extends Container {
                 max: angleDeg + 30
               });
 
+              this.reduceAmmo();
+
               this.scene.sound.play('sfx-shotgun-shot');
             }
+            else if (this.currentWeapon === 'smg') {
+              // configure emitter for single shot
+              this.emitter.fromJSON({
+                speed: 500,
+                lifespan: 2000,
+                quantity: 1,
+                frequency: 100
+              });
 
-
-            this.scene.ui.bulletsInClip[this.currentWeapon]--;
-            const uiBullets = this.scene.ui.uiBullets[this.currentWeapon];
-            for (let i = uiBullets.length - 1; i >= 0; i--) {
-              const bullet = uiBullets[i];
-
-              if (i > this.scene.ui.bulletsInClip[this.currentWeapon] - 1) {
-                bullet.setAlpha(0.5);
-              }
+              // Aiming handled in update loop
             }
 
             this.emitter.start();
-            this.top.play({ key: `fire-${this.currentWeapon}`, repeat: 0 });
+            if (this.currentWeapon === 'smg') {
+              this.top.play({ key: `fire-${this.currentWeapon}`, repeat: -1 });
+            }
+            else {
+              this.top.play({ key: `fire-${this.currentWeapon}`, repeat: 0 });
+            }
           }
           else {
             this.scene.sound.play('sfx-dryfire');
           }
         }
+      }
+    });
+
+    this.scene.input.on('pointerup', () => {
+      if (this.currentWeapon === 'smg') {
+        this.emitter.stop();
+        this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
       }
     });
 
@@ -193,21 +230,38 @@ class RedLeader extends Container {
 
     // Change weapon
     this.scene.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
-      if (deltaY < 0 && this.currentWeapon !== 'pistol') {
-        this.currentWeapon = 'pistol';
-        this.scene.ui.showAmmoUI('pistol');
-        this.scene.sound.play('sfx-pistol-reload');
+      const weaponIndex = this.allWeapons.indexOf(this.currentWeapon);
+      let nextIndex = null;
+
+      if (deltaY > 0) {
+        nextIndex = (weaponIndex + 1 < this.allWeapons.length ? weaponIndex + 1 : weaponIndex);
       }
-      else if (deltaY > 0 && this.currentWeapon !== 'shotgun') {
-        this.currentWeapon = 'shotgun';
-        this.scene.ui.showAmmoUI('shotgun');
-        this.scene.sound.play('sfx-shotgun-reload');
+      else if (deltaY < 0) {
+        nextIndex = (weaponIndex - 1 > -1 ? weaponIndex - 1 : weaponIndex);
       }
-      this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
+
+      if (this.currentWeapon !== this.allWeapons[nextIndex]) {
+        this.currentWeapon = this.allWeapons[nextIndex];
+        this.scene.ui.showAmmoUI(this.currentWeapon);
+        this.scene.sound.play(`sfx-${this.currentWeapon}-reload`);
+        this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
+      }
     });
 
     this.moveSpeed = 150;
     this.WSAD = this.scene.input.keyboard.addKeys('W,S,A,D');
+  }
+
+  reduceAmmo() {
+    this.scene.ui.bulletsInClip[this.currentWeapon]--;
+    const uiBullets = this.scene.ui.uiBullets[this.currentWeapon];
+    for (let i = uiBullets.length - 1; i >= 0; i--) {
+      const bullet = uiBullets[i];
+
+      if (i > this.scene.ui.bulletsInClip[this.currentWeapon] - 1) {
+        bullet.setAlpha(0.5);
+      }
+    }
   }
 
   receiveDamage(damage) {
@@ -261,7 +315,7 @@ class RedLeader extends Container {
       this.gun.play({ key: this.currentWeapon, repeat: 0 });
       const xOffset = pMath.Between(-50, 50);
       const yOffset = pMath.Between(-50, 50);
-      const angle = pMath.Between(0, 360);
+      const angle = pMath.Between(200, 400);
 
       this.scene.tweens.add({
         targets: this.gun,
@@ -355,6 +409,17 @@ class RedLeader extends Container {
       else {
         this.bottom.stop();
         this.bottom.setFrame(0);
+      }
+
+      // Constant aim for SMG
+      if (this.currentWeapon === 'smg') {
+        const {mousePointer} = this.scene.input;
+        const aimPoint = this.scene.cameras.main.getWorldPoint(mousePointer.x, mousePointer.y);
+        const aimX = aimPoint.x;
+        const aimY = aimPoint.y;
+        const aimAngle = pMath.Angle.Between(this.x, this.y, aimX, aimY);
+        const angleDeg = ((aimAngle) * 180 / Math.PI);
+        this.emitter.setAngle(angleDeg);
       }
     }
   }
