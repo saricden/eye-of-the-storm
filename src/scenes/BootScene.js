@@ -8,7 +8,8 @@ class BootScene extends Scene {
   preload() {
     // Load any assets here from your assets directory
     this.load.image('bullet', 'assets/bullet.png');
-    this.load.image('ui-shell', 'assets/ui-shell.png');
+    this.load.image('ui-shell-pistol', 'assets/ui-shell.png');
+    this.load.image('ui-shell-shotgun', 'assets/ui-shell-shotgun.png');
     this.load.image('pistol', 'assets/pistol.png');
     
     this.load.atlas('mc-top', 'assets/mc-top.png', 'assets/mc-top.json');
@@ -31,6 +32,8 @@ class BootScene extends Scene {
     this.load.audio('sfx-squak', 'assets/sfx/squak.mp3');
     this.load.audio('sfx-footstep', 'assets/sfx/footstep.mp3');
     this.load.audio('sfx-death-cry', 'assets/sfx/death-cry.mp3');
+    this.load.audio('sfx-shotgun-shot', 'assets/sfx/shotgun-shot.mp3');
+    this.load.audio('sfx-shotgun-reload', 'assets/sfx/shotgun-reload.mp3');
 
     // Music
     this.load.audio('music-wow', 'assets/music/Waves_of_War.m4a');
@@ -43,6 +46,8 @@ class BootScene extends Scene {
     this.anims.createFromAseprite('mc-bottom');
     this.anims.createFromAseprite('mc-die');
     this.anims.createFromAseprite('bug');
+
+    // this.sound.setVolume(0);
 
     this.scene.start('scene-title');
   }

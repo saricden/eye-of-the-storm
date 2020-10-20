@@ -22,6 +22,8 @@ class RedLeader extends Container {
     this.scene = scene;
     this.pistol = pistol;
 
+    this.currentWeapon = 'shotgun';
+
     this.scene.add.existing(this);
     this.scene.physics.world.enable(this);
 
@@ -38,9 +40,7 @@ class RedLeader extends Container {
 
     this.top.setOrigin(0.5, 0.5);
 
-    this.top.play({ key: 'idle', repeat: 0 });
-
-    this.setDepth(3);
+    this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
 
     this.maxHP = 20;
     this.hp = this.maxHP;
@@ -82,36 +82,70 @@ class RedLeader extends Container {
       angle: 0,
       deathZone: { type: 'onEnter', source: enemyCollider },
       emitCallback: () => {
-        if (this.scene.ui.bulletsInClip > 0) {
-          this.scene.sound.play('sfx-pistol-shot');
-          this.emitter.stop();
-
-          this.scene.ui.bulletsInClip--;
-          const {uiBullets} = this.scene.ui;
-          for (let i = uiBullets.length - 1; i >= 0; i--) {
-            const bullet = uiBullets[i];
-
-            if (i > this.scene.ui.bulletsInClip - 1) {
-              bullet.setAlpha(0.5);
-            }
-          }
-        }
-
+        this.emitter.stop();
       },
       emitCallbackScope: this
     });
 
     this.top.on('animationcomplete', () => {
-      this.top.play({ key: 'idle', repeat: 0 });
+      this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
       this.isReloading = false;
     });
     
+    // SHOOT
     this.scene.input.on('pointerdown', () => {
       if (!this.isDead) {
         if (!this.isReloading) {
-          if (this.scene.ui.bulletsInClip > 0) {
+          if (this.scene.ui.bulletsInClip[this.currentWeapon] > 0) {
+            
+            const {mousePointer} = this.scene.input;
+            const aimPoint = this.scene.cameras.main.getWorldPoint(mousePointer.x, mousePointer.y);
+            const aimX = aimPoint.x;
+            const aimY = aimPoint.y;
+            const aimAngle = pMath.Angle.Between(this.x, this.y, aimX, aimY);
+            const angleDeg = ((aimAngle) * 180 / Math.PI);
+
+            if (this.currentWeapon === 'pistol') {
+              // configure emitter for single shot
+              this.emitter.fromJSON({
+                speed: 500,
+                lifespan: 2000,
+                quantity: 1
+              });
+
+              this.emitter.setAngle(angleDeg);
+
+              this.scene.sound.play('sfx-pistol-shot');
+            }
+            else if (this.currentWeapon === 'shotgun') {
+              // configure emitter for spread shot
+              this.emitter.fromJSON({
+                speed: 500,
+                lifespan: 400,
+                quantity: 8
+              });
+
+              this.emitter.setAngle({
+                min: angleDeg - 30,
+                max: angleDeg + 30
+              });
+
+              this.scene.sound.play('sfx-shotgun-shot');
+            }
+
+
+            this.scene.ui.bulletsInClip[this.currentWeapon]--;
+            const uiBullets = this.scene.ui.uiBullets[this.currentWeapon];
+            for (let i = uiBullets.length - 1; i >= 0; i--) {
+              const bullet = uiBullets[i];
+
+              if (i > this.scene.ui.bulletsInClip[this.currentWeapon] - 1) {
+                bullet.setAlpha(0.5);
+              }
+            }
+
             this.emitter.start();
-            this.top.play({ key: 'fire', repeat: 0 });
+            this.top.play({ key: `fire-${this.currentWeapon}`, repeat: 0 });
           }
           else {
             this.scene.sound.play('sfx-dryfire');
@@ -122,7 +156,10 @@ class RedLeader extends Container {
 
     // Reload
     this.scene.input.keyboard.on('keyup-R', () => {
-      const {clipMaxBullets, bulletsInClip, totalBullets, uiBullets} = this.scene.ui;
+      const clipMaxBullets = this.scene.ui.clipMaxBullets[this.currentWeapon];
+      const bulletsInClip = this.scene.ui.bulletsInClip[this.currentWeapon];
+      const totalBullets = this.scene.ui.totalBullets[this.currentWeapon];
+      const uiBullets = this.scene.ui.uiBullets[this.currentWeapon];
 
       if (totalBullets > 0 && bulletsInClip < clipMaxBullets) {
         let bulletsToReload = (clipMaxBullets - bulletsInClip);
@@ -144,14 +181,29 @@ class RedLeader extends Container {
           });
         }
 
-        this.scene.ui.totalBullets -= bulletsToReload;
-        this.scene.ui.bulletsInClip += bulletsToReload;
+        this.scene.ui.totalBullets[this.currentWeapon] -= bulletsToReload;
+        this.scene.ui.bulletsInClip[this.currentWeapon] += bulletsToReload;
 
-        this.scene.ui.ammoText.setText(this.scene.ui.totalBullets);
+        this.scene.ui.ammoText[this.currentWeapon].setText(this.scene.ui.totalBullets[this.currentWeapon]);
         this.scene.sound.play('sfx-reload');
-        this.top.play({ key: 'reload', repeat: 0, frameRate: 6 });
+        this.top.play({ key: `reload-${this.currentWeapon}`, repeat: 0, frameRate: 6 });
         this.isReloading = true;
       }
+    });
+
+    // Change weapon
+    this.scene.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
+      if (deltaY < 0 && this.currentWeapon !== 'pistol') {
+        this.currentWeapon = 'pistol';
+        this.scene.ui.showAmmoUI('pistol');
+        this.scene.sound.play('sfx-reload');
+      }
+      else if (deltaY > 0 && this.currentWeapon !== 'shotgun') {
+        this.currentWeapon = 'shotgun';
+        this.scene.ui.showAmmoUI('shotgun');
+        this.scene.sound.play('sfx-shotgun-reload');
+      }
+      this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
     });
 
     this.moveSpeed = 150;
@@ -234,6 +286,8 @@ class RedLeader extends Container {
       const aimY = aimPoint.y;
       const aimAngle = pMath.Angle.Between(this.x, this.y, aimX, aimY);
 
+      this.emitter.setPosition(this.x + (this.body.width / 2), this.y + (this.body.height / 2));
+
       // Step sfx
       const currentFrameName = this.bottom.frame.name;
       if (this.prevFrameName !== '' && currentFrameName !== this.prevFrameName && (currentFrameName === '2' || currentFrameName === '6')) {
@@ -301,11 +355,6 @@ class RedLeader extends Container {
         this.bottom.stop();
         this.bottom.setFrame(0);
       }
-
-      // Bullets
-      this.emitter.setPosition(this.x + (this.body.width / 2), this.y + (this.body.height / 2));
-      const angleDeg = ((aimAngle) * 180 / Math.PI);
-      this.emitter.setAngle(angleDeg);
     }
   }
 }

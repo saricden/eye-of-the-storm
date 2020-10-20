@@ -12,35 +12,83 @@ class GameUI extends Scene {
 
     this.gameScene = this.scene.get('scene-game');
     this.mc = this.gameScene.mc;
+    
     this.totalBullets = 250;
     this.clipMaxBullets = 20;
     this.clipRows = 2;
     this.bulletsInClip = this.clipMaxBullets;
     this.uiBullets = [];
-    this.lastRowY = 0;
+
+    this.totalBullets = {
+      'pistol': 250,
+      'shotgun': 40
+    };
+    this.clipMaxBullets = {
+      'pistol': 20,
+      'shotgun': 8
+    };
+    this.bulletsInClip = {
+      'pistol': this.clipMaxBullets['pistol'],
+      'shotgun': this.clipMaxBullets['shotgun']
+    };
+    this.clipRows = {
+      'pistol': 2,
+      'shotgun': 1
+    };
+    this.uiBullets = {
+      'pistol': [],
+      'shotgun': []
+    };
+    this.lastRowY = {
+      'pistol': 0,
+      'shotgun': 0
+    };
+
+    this.ammoText = {
+      'pistol': null,
+      'shotgun': null
+    };
 
     // Clip UI
-    for (let y = 0; y < this.clipRows; y++) {
-      const rowTotal = (this.clipMaxBullets / this.clipRows);
-      for (let x = 0; x < rowTotal; x++) {
-        const uiBullet = this.add.image((20 + x * 16), (20 + y * 22), 'ui-shell');
-        uiBullet.setScrollFactor(0);
-        uiBullet.setDepth(100);
+    for (let g in this.clipRows) {
+      const visible = (g === this.mc.currentWeapon);
 
-        this.uiBullets = [
-          ...this.uiBullets,
-          uiBullet
-        ];
-        this.lastRowY = (20 + y * 16);
+      for (let y = 0; y < this.clipRows[g]; y++) {
+        const rowTotal = (this.clipMaxBullets[g] / this.clipRows[g]);
+        for (let x = 0; x < rowTotal; x++) {
+          const uiBullet = this.add.image((20 + x * 16), (20 + y * 22), `ui-shell-${g}`);
+          uiBullet.setScrollFactor(0);
+          uiBullet.setDepth(100);
+          uiBullet.setVisible(visible);
+
+          this.uiBullets[g] = [
+            ...this.uiBullets[g],
+            uiBullet
+          ];
+          this.lastRowY[g] = (20 + y * 16);
+        }
       }
+
+      this.ammoText[g] = this.add.text(15, (this.lastRowY[g] + 38), this.totalBullets[g], {
+        color: '#FFF',
+        fontSize: 20
+      });
+      this.ammoText[g].setOrigin(0, 1);
+      this.ammoText[g].setDepth(100);
+      this.ammoText[g].setVisible(visible);
     }
 
-    this.ammoText = this.add.text(15, (this.lastRowY + 38), this.totalBullets, {
-      color: '#FFF',
-      fontSize: 20
-    });
-    this.ammoText.setOrigin(0, 1);
-    this.ammoText.setDepth(100);
+    // UI background
+    this.bgClip = this.add.graphics();
+    this.bgClip.fillStyle(0x0033CC, 0.5);
+
+    // Clip bg
+    this.bgClip.fillRect(
+      0,
+      0,
+      (30 + (this.clipMaxBullets[this.mc.currentWeapon] / this.clipRows[this.mc.currentWeapon] * 16)),
+      (40 + this.clipRows[this.mc.currentWeapon] * 22)
+    );
 
     // Mini Map
     const miniMapWidth = (window.innerWidth * 0.25);
@@ -53,20 +101,13 @@ class GameUI extends Scene {
     );
 
     this.miniMap.startFollow(this.gameScene.mc);
+    this.miniMap.setBounds(0, 0, this.gameScene.solidLayer.width, this.gameScene.solidLayer.height);
     this.miniMap.setBackgroundColor(0xCCCCCC);
 
     this.miniMap.setZoom(0.3);
 
     // UI background
     this.uiBgGFX.fillStyle(0x0033CC, 0.5);
-
-    // Clip bg
-    this.uiBgGFX.fillRect(
-      0,
-      0,
-      (40 + (this.clipMaxBullets / this.clipRows * 16)),
-      (40 + this.clipRows * 22)
-    );
 
     // MiniMap bg... Border :(
     this.uiBgGFX.fillRect(
@@ -100,6 +141,34 @@ class GameUI extends Scene {
     this.fadeGfx.setDepth(1000);
   }
 
+  showAmmoUI(gun) {
+    for (let g in this.clipRows) {
+      const visible = (g === gun);
+
+      for (let y = 0; y < this.clipRows[g]; y++) {
+        const rowTotal = (this.clipMaxBullets[g] / this.clipRows[g]);
+        for (let x = 0; x < rowTotal; x++) {
+          const bulletIndex = ((y * rowTotal) + x);
+          const uiBullet = this.uiBullets[g][bulletIndex];
+          uiBullet.setVisible(visible);
+        }
+      }
+
+      this.ammoText[g].setVisible(visible);
+    }
+
+    
+    // Clip bg
+    this.bgClip.clear();
+    this.bgClip.fillStyle(0x0033CC, 0.5);
+    this.bgClip.fillRect(
+      0,
+      0,
+      (30 + (this.clipMaxBullets[gun] / this.clipRows[gun] * 16)),
+      (40 + this.clipRows[gun] * 22)
+    );
+  }
+
   fadeToWhite() {
     this.fadeGfx.fillStyle(0xFFFFFF, 1);
     this.fadeGfx.setAlpha(0);
@@ -121,18 +190,19 @@ class GameUI extends Scene {
     this.uiHpBarGFX.clear();
 
     if (this.mc.hp > 0) {
+      const gun = this.mc.currentWeapon;
       this.uiHpBarGFX.fillStyle(0x0033CC, 0.5);
       this.uiHpBarGFX.fillRect(
-        (60 + (this.clipMaxBullets / this.clipRows * 16)),
+        (60 + (this.clipMaxBullets[gun] / this.clipRows[gun] * 16)),
         10,
-        window.innerWidth - (80 + (this.clipMaxBullets / this.clipRows * 16)),
+        window.innerWidth - (80 + (this.clipMaxBullets[gun] / this.clipRows[gun] * 16)),
         60
       );
       this.uiHpBarGFX.fillStyle(0xFFFFFF, 1);
       this.uiHpBarGFX.fillRect(
-        (70 + (this.clipMaxBullets / this.clipRows * 16)),
+        (70 + (this.clipMaxBullets[gun] / this.clipRows[gun] * 16)),
         20,
-        (window.innerWidth - (100 + (this.clipMaxBullets / this.clipRows * 16))) * (this.mc.hp / this.mc.maxHP),
+        (window.innerWidth - (100 + (this.clipMaxBullets[gun] / this.clipRows[gun] * 16))) * (this.mc.hp / this.mc.maxHP),
         40
       );
     }

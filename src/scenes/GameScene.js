@@ -79,25 +79,12 @@ class GameScene extends Scene {
     this.cameraZoom = 2;
     this.cameras.main.setZoom(2);
     this.cameras.main.setBackgroundColor(0xCCCCCC);
-
-    this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
-      // this.cameraZoom -= (deltaY * 0.005);
-      // if (this.cameraZoom < 1) {
-      //   this.cameraZoom = 1;
-      // }
-      // else if (this.cameraZoom > 4) {
-      //   this.cameraZoom = 4;
-      // }
-      // this.cameras.main.setZoom(this.cameraZoom);
-    });
     
     // Music
     this.bgm = this.sound.add('music-wow', {
       loop: true
     });
     this.bgm.play();
-
-    // this.bgm.setVolume(0);
   }
 
   update(time, delta) {
