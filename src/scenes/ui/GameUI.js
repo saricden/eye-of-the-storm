@@ -44,11 +44,6 @@ class GameUI extends Scene {
       'shotgun': [],
       'smg': []
     };
-    this.lastRowY = {
-      'pistol': 0,
-      'shotgun': 0,
-      'smg': 0
-    };
 
     this.ammoText = {
       'pistol': null,
@@ -72,17 +67,19 @@ class GameUI extends Scene {
             ...this.uiBullets[g],
             uiBullet
           ];
-          this.lastRowY[g] = (20 + y * 16);
         }
       }
+    }
 
-      this.ammoText[g] = this.add.text(15, (this.lastRowY[g] + 38), this.totalBullets[g], {
+    for (let r in this.clipRows) {
+      const visible = (r === this.mc.currentWeapon);
+      this.ammoText[r] = this.add.text(15, (22 + this.clipRows[r] * 22), this.totalBullets[r], {
         color: '#FFF',
         fontSize: 20
       });
-      this.ammoText[g].setOrigin(0, 1);
-      this.ammoText[g].setDepth(100);
-      this.ammoText[g].setVisible(visible);
+      this.ammoText[r].setOrigin(0, 0.5);
+      this.ammoText[r].setDepth(100);
+      this.ammoText[r].setVisible(visible);
     }
 
     console.log(this.uiBullets);
