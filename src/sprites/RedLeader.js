@@ -1,4 +1,6 @@
 import {GameObjects, Math as pMath} from 'phaser';
+import Rockets from '../projectiles/Rockets';
+import Kabooms from '../sprites/Kabooms';
 
 const {Container} = GameObjects;
 
@@ -25,7 +27,8 @@ class RedLeader extends Container {
     this.allWeapons = [
       'pistol',
       'shotgun',
-      'smg'
+      'smg',
+      'rocket-launcher'
     ];
     // this.equipedWeapons = [];
     this.currentWeapon = this.allWeapons[0];
@@ -62,7 +65,7 @@ class RedLeader extends Container {
       contains: (x, y) => {
         let hit = false;
 
-        this.scene.enemies.forEach((enemy) => {
+        this.scene.enemies.children.entries.forEach((enemy) => {
           if (enemy.sprite.body.hitTest(x, y) && !enemy.isDead) {
             enemy.hp -= 1;
             enemy.alerted = true;
@@ -105,6 +108,31 @@ class RedLeader extends Container {
       },
       emitCallbackScope: this
     });
+
+    this.rockets = new Rockets(this.scene);
+    this.rockets.setDepth(45);
+
+    this.kabooms = new Kabooms(this.scene);
+    this.kabooms.setDepth(100);
+
+    this.scene.physics.add.overlap(
+      this.rockets,
+      this.scene.enemies,
+      (enemy, rocket) => {
+        if (rocket.active && !enemy.isDead) {
+          this.kabooms.boom(rocket.x, rocket.y);
+          rocket.setVisible(false);
+          rocket.setActive(false);
+          rocket.contrailEmitter.stop();
+          enemy.hp = 0;
+          if (enemy.enemyType === 'bug') {
+            this.scene.sound.play('sfx-squak');
+          }
+        }
+      },
+      null,
+      this
+    );
 
     this.top.on('animationcomplete', () => {
       this.top.play({ key: `idle-${this.currentWeapon}`, repeat: 0 });
@@ -168,8 +196,32 @@ class RedLeader extends Container {
 
               // Aiming handled in update loop
             }
+            else if (this.currentWeapon === 'rocket-launcher') {
+              // configure emitter for single shot
+              this.emitter.fromJSON({
+                speed: 500,
+                lifespan: 2000,
+                quantity: 1,
+                frequency: 0
+              });
 
-            this.emitter.start();
+              this.emitter.setAngle(angleDeg);
+
+              this.reduceAmmo();
+
+              this.scene.sound.play('sfx-rocket-launcher-shot');
+
+              // Aiming handled in update loop
+            }
+
+            if (this.currentWeapon === 'rocket-launcher') {
+              // shoot a rocket
+              this.rockets.fire(this.x, this.y, aimX, aimY, this.top.rotation);
+            }
+            else {
+              // bullets
+              this.emitter.start();
+            }
             if (this.currentWeapon === 'smg') {
               this.top.play({ key: `fire-${this.currentWeapon}`, repeat: -1 });
             }

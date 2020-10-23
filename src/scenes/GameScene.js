@@ -32,6 +32,9 @@ class GameScene extends Scene {
     // Spawnpoints
     const spawnLayer = this.map.getObjectLayer('spawn-points');
     this.bugs = [];
+    this.enemies = this.add.group({
+      runChildUpdate: true
+    });
 
     for (let s in spawnLayer.objects) {
       const point = spawnLayer.objects[s];
@@ -65,16 +68,9 @@ class GameScene extends Scene {
           }
         }, null, this);
 
-        this.bugs = [
-          ...this.bugs,
-          bug
-        ];
+        this.enemies.add(bug);
       }
     }
-
-    this.enemies = [
-      ...this.bugs
-    ];
 
     this.cameraZoom = 2;
     this.cameras.main.setZoom(2);
@@ -90,9 +86,9 @@ class GameScene extends Scene {
   update(time, delta) {
     
     this.mc.update(time, delta);
-    this.bugs.forEach((bug) => {
-      bug.update();
-    });
+    // this.bugs.forEach((bug) => {
+    //   bug.update();
+    // });
   }
 
 }
