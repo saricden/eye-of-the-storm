@@ -12,12 +12,20 @@ class Rocket extends Sprite {
       x: 0,
       y: 0,
       speed: {
-        min: 100,
-        max: 200
+        min: 0,
+        max: 25
+      },
+      scale: {
+        start: 1,
+        end: 4
+      },
+      alpha: {
+        start: 1,
+        end: 0
       },
       lifespan: 1000,
       on: false,
-      quantity: 1,
+      quantity: 4,
       angle: 0
     });
   }
@@ -25,11 +33,16 @@ class Rocket extends Sprite {
   fire(x, y, aimX, aimY, angle) {
     this.body.reset(x, y);
     
+    const angleDeg = (angle + Math.PI / 2) * 180 / Math.PI;
+
     this.setRotation(angle);
     this.setActive(true);
     this.setVisible(true);
     this.contrailEmitter.setPosition(x, y);
-    this.contrailEmitter.setAngle((angle + Math.PI / 2) * 180 / Math.PI);
+    this.contrailEmitter.setAngle({
+      min: angleDeg - 60,
+      max: angleDeg + 60
+    });
     this.contrailEmitter.start();
 
     this.scene.physics.moveTo(this, aimX, aimY, 200);
