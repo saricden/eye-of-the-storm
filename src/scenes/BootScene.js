@@ -26,6 +26,16 @@ class BootScene extends Scene {
     this.load.image('map1-tileset', 'assets/map1-tileset.png');
     this.load.tilemapTiledJSON('map1', 'assets/map1.json');
 
+    // Title graphics
+    this.load.image('ts-cliff-l', 'assets/title-screen/fg-cliff-l.png');
+    this.load.image('ts-cliff-r', 'assets/title-screen/fg-cliff-r.png');
+    this.load.image('ts-sun', 'assets/title-screen/sun.png');
+    this.load.image('ts-mountain1', 'assets/title-screen/bg-mountain1.png');
+    this.load.image('ts-mountain2', 'assets/title-screen/bg-mountain2.png');
+    this.load.image('ts-mountain3', 'assets/title-screen/bg-mountain3.png');
+    this.load.image('ts-mountain4', 'assets/title-screen/bg-mountain4.png');
+    this.load.image('ts-mountain5', 'assets/title-screen/bg-mountain5.png');
+
     // SFX
     this.load.audio('sfx-pistol-shot', 'assets/sfx/gunshot.mp3');
     this.load.audio('sfx-lil-splat', 'assets/sfx/splat.mp3');
